@@ -16,6 +16,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/images")
@@ -59,9 +60,29 @@ public class ImagesController {
         return new ResponseEntity<>(image.getFile(), headers, HttpStatus.OK);
     }
 
+    @GetMapping
+    public ResponseEntity<List<ImageDTO>> search(
+            @RequestParam(value = "extension", required = false, defaultValue = "") String extension,
+            @RequestParam(value = "query",required = false) String query) throws InterruptedException {
+
+        Thread.sleep(3000L);
+
+        var result = service.search(ImageExtension.ofName(extension), query);
+
+        var images = result.stream().map(image -> {
+            var url = buildImageUrl(image);
+            return mapper.imageToDTO(image, url.toString());
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(images);
+    }
+
+
     private URI buildImageUrl(Image image) {
         String imagePath = "/" + image.getId();
-        return ServletUriComponentsBuilder.fromCurrentRequest()
+        return ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path(imagePath).build().toUri();
     }
+
+
 }

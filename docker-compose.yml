@@ -4,13 +4,12 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: imagelite
+      POSTGRES_DB: image
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
-    volumes:
-      - ./data:/var/lib/postgresql/data
+
 
   pgadmin:
     image: dpage/pgadmin4
