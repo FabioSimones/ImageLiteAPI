@@ -9,28 +9,24 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+import static com.devfabiosimones.imageliteapi.infra.repository.specs.GenericSpecs.conjuction;
+import static com.devfabiosimones.imageliteapi.infra.repository.specs.ImageSpecs.*;
+import static org.springframework.data.jpa.domain.Specification.anyOf;
+
 public interface ImageRepository extends JpaRepository<Image, String>, JpaSpecificationExecutor<Image> {
 
     default List<Image> findByExtensionAndNameOrTagLike(ImageExtension extension, String query){
         //SELECT * FROM IMAGE WHERE 1=1
-        Specification<Image> conjuction = (root, q, criteriaBuilder) -> criteriaBuilder.conjunction();
-        Specification<Image> spec = Specification.where(conjuction);
+        Specification<Image> spec = Specification.where(conjuction());
 
         if(extension != null){
             //AND EXTENSION = 'PNG'
-            Specification<Image> extensionEqual = (root, q, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get("extension"), extension);
-            spec = spec.and(extensionEqual);
+            spec = spec.and(extensionEqual(extension));
         }
 
         if(StringUtils.hasText(query)){
             //AND (NAME LIKE 'QUERY' OR TAG LIKE 'QUERY')
-            Specification<Image> nameLike = (root, q, criteriaBuilder) ->
-                    criteriaBuilder.like(criteriaBuilder.upper(root.get("name")), "%" + query.toUpperCase() + "%");
-            Specification<Image> tagLike = (root, q, criteriaBuilder) ->
-                    criteriaBuilder.like(criteriaBuilder.upper(root.get("tags")), "%" + query.toUpperCase() + "%");
-            Specification<Image> nameOrTagLike = Specification.anyOf(nameLike, tagLike);
-            spec = spec.and(nameOrTagLike);
+            spec = spec.and(anyOf(nameLike(query), tagsLike(query)));
         }
 
         return findAll(spec);
