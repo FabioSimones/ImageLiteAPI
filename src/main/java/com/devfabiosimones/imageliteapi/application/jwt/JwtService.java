@@ -2,6 +2,7 @@ package com.devfabiosimones.imageliteapi.application.jwt;
 
 import com.devfabiosimones.imageliteapi.domain.AccessToken;
 import com.devfabiosimones.imageliteapi.domain.entity.User;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -45,5 +46,20 @@ public class JwtService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("name", user.getName());
         return claims;
+    }
+
+    public String getEmailFromToken(String tokenJwt){
+        try{
+            return Jwts.parser()
+                    .verifyWith(secretKeyGenerator.getKey())
+                    .build()
+                    .parseSignedClaims(tokenJwt)
+                    .getPayload()
+                    .getSubject();
+        }
+        catch (JwtException e){
+            throw new InvalidTokenException(e.getMessage());
+        }
+
     }
 }
